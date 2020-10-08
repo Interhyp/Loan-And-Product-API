@@ -1,0 +1,352 @@
+{
+	"info": {
+		"_postman_id": "065baf15-6f61-473a-905a-20658e91b531",
+		"name": "Loan And Product",
+		"description": "Beispielaufrufe für die Loan And Product API\n\nFür jeden Aufruf, wird ein Authorisierungstoken gebraucht.\n\nDieser kann und wird über den Aufruf \"getToken\" in eine Varaible gespeichert und kann somit genutzt werden.\n\nÜber das Environment, können die jeweiligen Links und Authentifizierungsdaten gewechselt werden",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "get Token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(pm.info.requestName, () => {",
+							"    pm.response.to.not.be.error;",
+							"    pm.response.to.not.have.jsonBody('error');",
+							"});",
+							"pm.environment.set(\"bearerToken\", pm.response.json().access_token);"
+						],
+						"id": "904690c8-cb60-4c55-bb3e-823c36dd3f5a"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "grant_type",
+							"value": "password",
+							"type": "text"
+						},
+						{
+							"key": "client_id",
+							"value": "{{clientID}}",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "{{clientSecret}}",
+							"type": "text"
+						},
+						{
+							"key": "username",
+							"value": "{{username}}",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "text"
+						}
+					],
+					"options": {
+						"urlencoded": {}
+					}
+				},
+				"url": {
+					"raw": "{{Authorization-Baselink}}/protocol/openid-connect/token",
+					"host": [
+						"{{Authorization-Baselink}}"
+					],
+					"path": [
+						"protocol",
+						"openid-connect",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Loan And Product - Produkte - Kauf Neubau",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"discriminator\": \"ReasonBuyNewRequest\",\r\n                \"financeNeed\": {\r\n                  \"alterBurdenWanted\": true,\r\n                  \"structure\": {\r\n                    \"financeTranches\": [\r\n                      {\r\n                        \"discriminator\": \"AnnuityLoanInstructions\",\r\n                        \"loan\": {\r\n                          \"discriminator\": \"AnnuityLoan\",\r\n                          \"amount\": 200000,\r\n                          \"overheadCommission\": 0.5,\r\n                          \"repayment\": {\r\n                            \"repaymentType\": \"AmortisationRepayment\",\r\n                            \"unscheduledRepaymentPerYear\": 2.5,\r\n                            \"amortisation\": 3\r\n                          },\r\n                          \"freeAllocationMonths\": 3,\r\n                          \"internalCommission\": 1,\r\n                          \"externalCommission\": 0.5,\r\n                          \"maturity\": {\r\n                            \"type\": \"LoanMaturity\",\r\n                            \"years\": 10\r\n                          }\r\n                        },\r\n                        \"payoutRate\": 100,\r\n                        \"payoutDate\": \"2020-07-01\"\r\n                      }\r\n                    ]\r\n                  }\r\n                },\r\n                \"financeStatus\": {\r\n                  \"equity\": 100000\r\n                },\r\n                \"households\": [\r\n                  {\r\n                    \"discriminator\": \"SingleHousehold\",\r\n                    \"cars\": 1,\r\n                    \"dependentChildren\": 0,\r\n                    \"persons\": 1,\r\n                    \"totalChildAllowance\": 0,\r\n                    \"applicant\": {\r\n                      \"address\": {\r\n                        \"city\": \"Muenchen\",\r\n                        \"country\": \"DE\",\r\n                        \"federalState\": \"Bayern\",\r\n                        \"houseNumber\": \"1\",\r\n                        \"street\": \"Blumenstrasse\",\r\n                        \"zipCode\": \"80807\"\r\n                      },\r\n                      \"birthDate\": \"1990-01-01\",\r\n                      \"contactInfo\": {\r\n                        \"email\": \"me@mail.de\",\r\n                        \"phoneNumber\": \"089 123456\"\r\n                      },\r\n                      \"employment\": {\r\n                        \"employmentType\": \"EMPLOYED\",\r\n                        \"inProbation\": false,\r\n                        \"income\": {\r\n                          \"discriminator\": \"NetSalaryIncome\",\r\n                          \"netSalary\": {\r\n                            \"monthlySalary\": 3000,\r\n                            \"numberOfMonthlySalaries\": 12\r\n                          }\r\n                        },\r\n                        \"startDate\": \"2010-01-01\",\r\n                        \"temporaryJob\": false\r\n                      },\r\n                      \"familyStatus\": {\r\n                        \"discriminator\": \"MaritalStatus\",\r\n                        \"maritalStatus\": \"SINGLE\"\r\n                      },\r\n                      \"gender\": \"M\",\r\n                      \"livingSituation\": {\r\n                        \"discriminator\": \"LivingSituationWithoutRent\",\r\n                        \"type\": \"PARENTS\"\r\n                      },\r\n                      \"name\": {\r\n                        \"firstNames\": \"Max\",\r\n                        \"lastName\": \"Mustermann\"\r\n                      },\r\n                      \"nationality\": \"DE\",\r\n                      \"mainApplicant\": true\r\n                    }\r\n                  }\r\n                ],\r\n                \"venture\": {\r\n                  \"discriminator\": \"BuyNewEstateFinancing\",\r\n                  \"acquisitionDate\": \"2020-07-01\",\r\n                  \"buyPrice\": 300000,\r\n                  \"costsOfPlannedModernisation\": 0,\r\n                  \"extraExpenses\": {\r\n                    \"notaryCosts\": 6000,\r\n                    \"transferTax\": 10500,\r\n                    \"brokerageFees\": 10500\r\n                  }\r\n                },\r\n                \"estate\": {\r\n                  \"discriminator\": \"House\",\r\n                  \"forcedSale\": false,\r\n                  \"liableParcels\": [\r\n                    {\r\n                      \"owner\": \"MAIN\"\r\n                    }\r\n                  ],\r\n                  \"marketValue\": 300000,\r\n                  \"residentialArea\": {\r\n                    \"address\": {\r\n                      \"city\": \"Muenchen\",\r\n                      \"country\": \"DE\",\r\n                      \"federalState\": \"Bayern\",\r\n                      \"houseNumber\": \"1\",\r\n                      \"street\": \"Leopoldstrasse\",\r\n                      \"zipCode\": \"80807\"\r\n                    },\r\n                    \"estateNeighbourhood\": \"RESIDENTIAL_AREA\"\r\n                  },\r\n                  \"standardGroundValue\": 2000,\r\n                  \"ownership\": {\r\n                    \"newOwnerIsMainApplicant\": true,\r\n                    \"newOwnerIsAdditionalApplicant\": false,\r\n                    \"newOwnerIsOther\": false\r\n                  },\r\n                  \"building\": {\r\n                    \"yearOfConstruction\": 2010,\r\n                    \"stories\": 3,\r\n                    \"construction\": \"MASSIVE\",\r\n                    \"liftAvailable\": false\r\n                  },\r\n                  \"housingUnit\": {\r\n                    \"livingSpace\": 150,\r\n                    \"numberOfParkingSpaces\": 1,\r\n                    \"utilization\": \"SELF_OCCUPIED\",\r\n                    \"leasehold\": false\r\n                  },\r\n                  \"type\": \"ONE_FAMILY_HOUSE\"\r\n                },\r\n                \"limit\": 2\r\n              }\r\n            }\r\n          }\r\n        }\r\n}",
+					"options": {
+						"raw": {}
+					}
+				},
+				"url": {
+					"raw": "{{Gateway-BaseLink}}/loan-and-product/v1/products",
+					"host": [
+						"{{Gateway-BaseLink}}"
+					],
+					"path": [
+						"loan-and-product",
+						"v1",
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Loan And Product - Produkte - Kauf Bestandsimmobilie",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"discriminator\": \"ReasonBuyExistingRequest\",\r\n    \"venture\": {\r\n        \"discriminator\": \"BuyExistingEstateFinancing\",\r\n        \"buyPrice\": 400000\r\n    },\r\n    \"estate\": {\r\n        \"discriminator\": \"House\",\r\n        \"type\": \"ONE_FAMILY_HOUSE\"\r\n    },\r\n    \"financeNeed\": {\r\n        \"structure\": {\r\n            \"financeTranches\": [\r\n                {\r\n                    \"discriminator\": \"AnnuityLoanInstructions\",\r\n                    \"loan\": {\r\n                        \"discriminator\": \"AnnuityLoan\",\r\n                        \"amount\": 50000,\r\n                        \"repayment\": {\r\n                            \"repaymentType\": \"FullRepayment\"\r\n                        },\r\n                        \"maturity\": {\r\n                            \"type\": \"LoanMaturity\",\r\n                            \"years\": 30\r\n                        }\r\n                    },\r\n                    \"payoutRate\": 100\r\n                },\r\n                {\r\n                    \"discriminator\": \"KfwPromotionLoanInstructions\",\r\n                    \"payoutRate\": 100,\r\n                    \"loan\": {\r\n                        \"discriminator\": \"KfwPromotionLoan\",\r\n                        \"amount\": 10000,\r\n                        \"program\": \"Wohneigen\",\r\n                        \"maturity\": {\r\n                            \"type\": \"BulletLoan\"\r\n                        }\r\n                    }\r\n                },\r\n                {\r\n                    \"discriminator\": \"AuxiliaryLoanInstructions\",\r\n                    \"loan\": {\r\n                        \"discriminator\": \"AuxiliaryLoan\",\r\n                        \"provider\": \"HanseaticAll\",\r\n                        \"amount\": 20000,\r\n                        \"maturity\": {\r\n                            \"type\": \"LoanMaturity\",\r\n                            \"years\": 5\r\n                        }\r\n                    }\r\n                }\r\n            ]\r\n        }\r\n    },\r\n    \"limit\": 1\r\n}",
+					"options": {
+						"raw": {}
+					}
+				},
+				"url": {
+					"raw": "{{Gateway-BaseLink}}/loan-and-product/v1/products",
+					"host": [
+						"{{Gateway-BaseLink}}"
+					],
+					"path": [
+						"loan-and-product",
+						"v1",
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Loan And Product - Produkte - Bauvorhaben",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"discriminator\": \"ReasonConstructionRequest\",\r\n    \"venture\": {\r\n        \"discriminator\": \"ConstructionEstateFinancing\",\r\n        \"constructionCosts\": 450000,\r\n        \"beginConstructionDate\": \"2021-07-03\"\r\n    },\r\n    \"estate\": {\r\n        \"discriminator\": \"House\",\r\n        \"type\": \"TWO_FAMILY_HOUSE\"\r\n    },\r\n    \"financeNeed\": {\r\n        \"structure\": {\r\n            \"financeTranches\": [\r\n                {\r\n                    \"discriminator\": \"AnnuityLoanInstructions\",\r\n                    \"loan\": {\r\n                        \"discriminator\": \"AnnuityLoan\",\r\n                        \"amount\": 50000,\r\n                        \"repayment\": {\r\n                            \"repaymentType\": \"AmortisationRepayment\",\r\n                            \"amortisation\": 3,\r\n                            \"unscheduledRepaymentPerYear\": 2\r\n                        },\r\n                        \"maturity\": {\r\n                            \"type\": \"LoanMaturity\",\r\n                            \"years\": 30\r\n                        }\r\n                    },\r\n                    \"payoutRate\": 100\r\n                }\r\n            ]\r\n        }\r\n    },\r\n    \"limit\": 1\r\n}",
+					"options": {
+						"raw": {}
+					}
+				},
+				"url": {
+					"raw": "{{Gateway-BaseLink}}/loan-and-product/v1/products",
+					"host": [
+						"{{Gateway-BaseLink}}"
+					],
+					"path": [
+						"loan-and-product",
+						"v1",
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Loan And Product - Produkte - Umbau / Modernisierung",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"discriminator\": \"ReasonRenovationRequest\",\r\n    \"venture\": {\r\n        \"discriminator\": \"RenovateEstateFinancing\",\r\n        \"costsOfPlannedModernisation\": 20000.0\r\n    },\r\n    \"estate\": {\r\n        \"discriminator\": \"House\",\r\n        \"type\": \"END_TERRACE_HOUSE\",\r\n        \"building\": {\r\n            \"yearOfConstruction\": 2010\r\n        }\r\n    },\r\n    \"financeNeed\": {\r\n        \"structure\": {\r\n            \"financeTranches\": [\r\n                {\r\n                    \"discriminator\": \"AnnuityLoanInstructions\",\r\n                    \"loan\": {\r\n                        \"discriminator\": \"AnnuityLoan\",\r\n                        \"amount\": 50000,\r\n                        \"repayment\": {\r\n                            \"repaymentType\": \"AmortisationRepayment\",\r\n                            \"amortisation\": 3,\r\n                            \"unscheduledRepaymentPerYear\": 2\r\n                        },\r\n                        \"maturity\": {\r\n                            \"type\": \"LoanMaturity\",\r\n                            \"years\": 10\r\n                        }\r\n                    },\r\n                    \"payoutRate\": 100\r\n                }\r\n            ]\r\n        }\r\n    },\r\n    \"limit\": 1\r\n}",
+					"options": {
+						"raw": {}
+					}
+				},
+				"url": {
+					"raw": "{{Gateway-BaseLink}}/loan-and-product/v1/products",
+					"host": [
+						"{{Gateway-BaseLink}}"
+					],
+					"path": [
+						"loan-and-product",
+						"v1",
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Loan And Product - Produkte - Anschlussfinanzierung",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"discriminator\": \"ReasonDebtReschedulingRequest\",\r\n    \"households\": [\r\n        {\r\n            \"discriminator\": \"SingleHousehold\",\r\n            \"applicant\": {\r\n                \"name\": {\r\n                    \"lastName\": \"John\",\r\n                    \"firstNames\": \"Bob\"\r\n                },\r\n                \"mainApplicant\": true,\r\n                \"birthDate\": \"1989-01-02\"\r\n            }\r\n        }\r\n    ],\r\n    \"venture\": {\r\n        \"discriminator\": \"DebtReschedulingFinancing\"\r\n    },\r\n    \"estate\": {\r\n        \"discriminator\": \"Plot\"\r\n    },\r\n    \"financeNeed\": {\r\n        \"structure\": {\r\n            \"financeTranches\": [\r\n                {\r\n                    \"discriminator\": \"AnnuityLoanInstructions\",\r\n                    \"loan\": {\r\n                        \"discriminator\": \"AnnuityLoan\",\r\n                        \"amount\": 50000,\r\n                        \"repayment\": {\r\n                            \"repaymentType\": \"AmortisationRepayment\",\r\n                            \"amortisation\": 3\r\n                        },\r\n                        \"maturity\": {\r\n                            \"type\": \"LoanMaturity\",\r\n                            \"years\": 10\r\n                        }\r\n                    },\r\n                    \"payoutRate\": 100,\r\n                    \"payoutDate\": \"2020-10-08\"\r\n                }\r\n            ]\r\n        }\r\n    },\r\n    \"limit\": 1\r\n}",
+					"options": {
+						"raw": {}
+					}
+				},
+				"url": {
+					"raw": "{{Gateway-BaseLink}}/loan-and-product/v1/products",
+					"host": [
+						"{{Gateway-BaseLink}}"
+					],
+					"path": [
+						"loan-and-product",
+						"v1",
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Loan And Product - Produkte - Kapitalbeschaffung",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"discriminator\": \"ReasonOtherCapitalFinancingRequest\",\r\n    \"households\": [\r\n        {\r\n            \"discriminator\": \"MultiplePersonHousehold\",\r\n            \"applicants\": [\r\n                {\r\n                    \"name\": {\r\n                        \"lastName\": \"John\",\r\n                        \"firstNames\": \"Bob\"\r\n                    },\r\n                    \"mainApplicant\": true,\r\n                    \"birthDate\": \"1989-01-02\"\r\n                },\r\n                {\r\n                    \"name\": {\r\n                        \"lastName\": \"John\",\r\n                        \"firstNames\": \"Bob\"\r\n                    },\r\n                    \"mainApplicant\": false,\r\n                    \"birthDate\": \"1989-01-02\"\r\n                }\r\n            ],\r\n            \"relationType\": \"MARRIED\"\r\n        }\r\n    ],\r\n    \"venture\": {\r\n        \"discriminator\": \"OtherCapitalFinancing\"\r\n    },\r\n    \"estate\": {\r\n        \"discriminator\": \"Plot\"\r\n    },\r\n    \"financeNeed\": {\r\n        \"structure\": {\r\n            \"financeTranches\": [\r\n                {\r\n                    \"discriminator\": \"AnnuityLoanInstructions\",\r\n                    \"loan\": {\r\n                        \"discriminator\": \"AnnuityLoan\",\r\n                        \"amount\": 50000,\r\n                        \"repayment\": {\r\n                            \"repaymentType\": \"AmortisationRepayment\",\r\n                            \"amortisation\": 3\r\n                        },\r\n                        \"maturity\": {\r\n                            \"type\": \"LoanMaturity\",\r\n                            \"years\": 10\r\n                        }\r\n                    },\r\n                    \"payoutRate\": 100,\r\n                    \"payoutDate\": \"2020-10-08\"\r\n                }\r\n            ]\r\n        }\r\n    },\r\n    \"limit\": 1\r\n}",
+					"options": {
+						"raw": {}
+					}
+				},
+				"url": {
+					"raw": "{{Gateway-BaseLink}}/loan-and-product/v1/products",
+					"host": [
+						"{{Gateway-BaseLink}}"
+					],
+					"path": [
+						"loan-and-product",
+						"v1",
+						"products"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "93e180f0-886a-41fc-8fcd-f635c4b4a2fc",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "4288b0a2-b141-42f0-a7e4-5ca42d2f1d09",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"protocolProfileBehavior": {}
+}
