@@ -1,0 +1,1820 @@
+openapi: 3.0.2
+info:
+  version: 'v1.1'
+  title: 'Loan And Product'
+  description: |-
+    Mit dieser API erhalten Sie die Möglichkeit verschiedene Zinsberechnungen durchzuführen.  
+    Über 400 Bankpartner liefern die Basis für die Berechnungen.    
+    Weitere Dateien (z.B. Postman Collections) finden Sie auf <a
+    href="https://github.com/Interhyp/Loan-And-Product-API" target="_blank">GitHub</a>.
+  termsOfService: "http://prohyp.de"
+  contact:
+    name: Prohyp GmbH / Accountmanagement
+    url: http://www.prohyp.de
+    email: AM@prohyp.de
+  x-logo:
+    url: "https://www.prohyp.de/prohyp-assets/images/logo-svg.svg?1508412251"
+    backgroundColor: "#FFFFFF"
+    altText: "Prohyp logo"
+servers:
+  - url: https://interhyp-external-api-management-production.azure-api.net/loan-and-product/v1
+    description: Production
+  - url: https://interhyp-external-api-management-test.azure-api.net/loan-and-product/v1
+    description: Test
+paths:
+  /products:
+    post:
+      operationId: loan-and-product
+      summary: Marktüberblick
+      tags:
+        - loan-and-product
+      description: |-
+        Mit diesem Endpunkt erhalten Sie einen Marktüberblick über alle Bankpartner.
+      parameters:
+        - name: Authorization
+          in: header
+          description: |-
+            Access Token im Bearer Format (siehe API "Authorisierung")
+            Beispiel:
+            Bearer xxx.yyy.zzz
+          schema:
+            type: string
+            pattern: '^Bearer .+$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MortgageProductsRequest'
+            example:
+              discriminator: ReasonBuyNewRequest
+              financeNeed:
+                alterBurdenWanted: true
+                structure:
+                  financeTranches:
+                    - discriminator: AnnuityLoanInstructions
+                      loan:
+                        discriminator: AnnuityLoan
+                        amount: 200000
+                        overheadCommission: 0.5
+                        repayment:
+                          repaymentType: AmortisationRepayment
+                          unscheduledRepaymentPerYear: 2.5
+                          amortisation: 3
+                        freeAllocationMonths: 3
+                        internalCommission: 1
+                        externalCommission: 0.5
+                        maturity:
+                          type: LoanMaturity
+                          years: 10
+                      payoutRate: 100
+                      payoutDate: '2020-07-01'
+              financeStatus:
+                equity: 100000
+              households:
+                - discriminator: SingleHousehold
+                  cars: 1
+                  dependentChildren: 0
+                  persons: 1
+                  totalChildAllowance: 0
+                  applicant:
+                    address:
+                      city: Muenchen
+                      country: DE
+                      federalState: Bayern
+                      houseNumber: '1'
+                      street: Blumenstrasse
+                      zipCode: '80807'
+                    birthDate: '1990-01-01'
+                    contactInfo:
+                      email: me@mail.de
+                      phoneNumber: 089 123456
+                    employment:
+                      employmentType: EMPLOYED
+                      inProbation: false
+                      income:
+                        discriminator: NetSalaryIncome
+                        monthlySalary: 3000
+                        numberOfMonthlySalaries: 12
+                      startDate: '2010-01-01'
+                      temporaryJob: false
+                    familyStatus:
+                      discriminator: MaritalStatus
+                      maritalStatus: SINGLE
+                    gender: M
+                    livingSituation:
+                      discriminator: LivingSituationWithoutRent
+                      type: PARENTS
+                    name:
+                      firstNames: Max
+                      lastName: Mustermann
+                    nationality: DE
+                    mainApplicant: true
+              venture:
+                discriminator: BuyNewEstateFinancing
+                acquisitionDate: '2020-07-01'
+                buyPrice: 300000
+                costsOfPlannedModernisation: 0
+                extraExpenses:
+                  notaryCosts: 6000
+                  transferTax: 10500
+                  brokerageFees: 10500
+              estate:
+                discriminator: House
+                forcedSale: false
+                liableParcels:
+                  - owner: MAIN
+                marketValue: 300000
+                residentialArea:
+                  address:
+                    city: Muenchen
+                    country: DE
+                    federalState: Bayern
+                    houseNumber: '1'
+                    street: Leopoldstrasse
+                    zipCode: '80807'
+                  estateNeighbourhood: RESIDENTIAL_AREA
+                standardGroundValue: 2000
+                ownership:
+                  newOwnerIsMainApplicant: true
+                  newOwnerIsAdditionalApplicant: false
+                  newOwnerIsOther: false
+                building:
+                  yearOfConstruction: 2010
+                  stories: 3
+                  construction: MASSIVE
+                  liftAvailable: false
+                housingUnit:
+                  livingSpace: 150
+                  numberOfParkingSpaces: 1
+                  utilization: SELF_OCCUPIED
+                  leasehold: false
+                type: ONE_FAMILY_HOUSE
+              limit: 2
+
+      responses:
+        200:
+          description: Erfolgreicher Aufruf mit Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MortgageProductsResponse'
+        401:
+          description: Authentifizierung fehlgeschlagen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthProblem'
+        403:
+          description: Zugriff verweigert
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RFC7807Problem'
+        404:
+          description: Keine Produkte verfügbar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RFC7807Problem'
+        500:
+          description: Interner Server Fehler
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RFC7807Problem'
+        default:
+          description: Unerwarteter Fehler
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RFC7807Problem'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Address:
+      description: Postanschrift
+      properties:
+        city:
+          type: string
+          description: Wohnort
+          example: "München"
+        country:
+          type: string
+          pattern: '^[A-Z]{2}$'
+          description: Land (ISO 3166 ALPHA-2)
+          example: "DE"
+        federalState:
+          type: string
+          description: Bundesstaat
+          example: Bayern
+        houseNumber:
+          type: string
+          description: Hausnummer
+          example: "1"
+        street:
+          type: string
+          description: Straße
+          example: "Hauptstraße"
+        zipCode:
+          type: string
+          pattern: '^\d{4,5}$'
+          description: PLZ
+          example: "81369"
+    AnnuityLoan:
+      description: Tranche des Annuitätendarlehens
+      allOf:
+        - $ref: '#/components/schemas/Loan'
+        - properties:
+            repayment:
+              $ref: '#/components/schemas/BasicRepayment'
+            freeAllocationMonths:
+              type: integer
+              description: bereitstellungszinsfreie Zeit
+              minimum: 0
+              example: 12
+            internalCommission:
+              $ref: '#/components/schemas/InternalCommission'
+            externalCommission:
+              $ref: '#/components/schemas/ExternalCommission'
+            maturity:
+              $ref: '#/components/schemas/LoanMaturity'
+          required:
+            - repayment
+            - maturity
+    BasicRepayment:
+      description: Art der Rückzahlung
+      properties:
+        repaymentType:
+          type: string
+        unscheduledRepaymentPerYear:
+          description: Sondertilgung pro Jahr in Prozent
+          type: number
+          format: double
+          minimum: 0.0
+          example: 3.5
+      required:
+        - repaymentType
+      discriminator:
+        propertyName: repaymentType
+    AmortisationRepayment:
+      description: Tilgung in Prozent
+      allOf:
+        - $ref: '#/components/schemas/BasicRepayment'
+        - properties:
+            amortisation:
+              type: number
+              format: double
+              minimum: 0
+              maximum: 99
+              description: Tilgung in Prozent
+              example: 2.0
+          required:
+            - amortisation
+    FullRepayment:
+      description: Volltilger
+      allOf:
+        - $ref: '#/components/schemas/BasicRepayment'
+    Applicant:
+      description: Antragsteller
+      required: [name, birthDate, mainApplicant]
+      properties:
+        address:
+          $ref: '#/components/schemas/Address'
+        birthDate:
+          type: string
+          format: date
+          description: Geburtsdatum
+          example: "1990-01-01"
+        children:
+          type: array
+          description: Unterhaltspflichtige Kinder
+          items:
+            $ref: '#/components/schemas/Child'
+        contactInfo:
+          $ref: '#/components/schemas/ContactInfo'
+        employment:
+          $ref: '#/components/schemas/Employment'
+        familyStatus:
+          $ref: '#/components/schemas/FamilyStatus'
+        gender:
+          type: string
+          description: >
+            Anrede:
+            * `F` - Frau
+            * `M` - Herr
+          x-extensible-enum:
+            - F
+            - M
+        livingSituation:
+          $ref: '#/components/schemas/LivingSituation'
+        name:
+          $ref: '#/components/schemas/PersonName'
+        nationality:
+          type: string
+          pattern: '^[A-Z]{2}$'
+          description: Staatsangehörigkeit (ISO 3166 ALPHA-2)
+          example: "DE"
+        mainApplicant:
+          type: boolean
+          description: ist Hauptantragsteller?
+          example: true
+    MortgageProductsRequest:
+      description: Antragsdaten
+      required:
+        - discriminator
+        - financeNeed
+      properties:
+        discriminator:
+          type: string
+          description: >
+            Typ:
+              * `ReasonBuyNewRequest` - Request für den Kauf einer neugebauten Immobilie
+              * `ReasonBuyExistingRequest` - Request für den Kauf einer Bestandsimmobilie
+              * `ReasonConstructionRequest` - Request für ein eigenes Bauvorhaben
+              * `ReasonRenovationRequest` - Request für einen Umbau oder eine Modernisierung
+              * `ReasonDebtReschedulingRequest` - Request Daten für eine Anschlussfinanzierung
+              * `ReasonOtherCapitalFinancingRequest` - Request Daten für eine Kapitalbeschaffung
+        financeNeed:
+          $ref: '#/components/schemas/FinanceNeed'
+        financeStatus:
+          $ref: '#/components/schemas/FinanceStatus'
+        households:
+          type: array
+          description: |-
+            Es werden maximal zwei Antragssteller unterstützt.
+            Wenn es sich um zusammenlebende Personen handelt, geben Sie einen Haushalt mit zwei Antragsstellern an.
+            Wenn es sich um unterschiedliche Haushalte handelt, geben Sie zwei Haushalte mit jeweils einem Antragssteller an.
+          items:
+            $ref: '#/components/schemas/Household'
+          minItems: 1
+          maxItems: 2
+        limit:
+          type: integer
+          description: Maximale Anzahl an zurückgelieferten Produkten
+          minimum: 1
+          example: 50
+        sort:
+          type: string
+          description: >
+            Sortierung der zurückgelieferten Produkte:
+             * `NOMINAL_INTEREST` - Sortierung nach Sollzins
+             * `EFFECTIVE_INTEREST` - Sortierung nach Effektivzins
+             * `PRODUCT_NAME` - Sortierung nach Produktnamen
+          x-extensible-enum:
+            - NOMINAL_INTEREST
+            - EFFECTIVE_INTEREST
+            - PRODUCT_NAME
+          default: EFFECTIVE_INTEREST
+      discriminator:
+        propertyName: discriminator
+    ReasonBuyNewRequest:
+      description: Antragsdaten für den Kauf einer neugebauten Immobilie
+      required:
+        - venture
+        - estate
+      allOf:
+        - $ref: '#/components/schemas/MortgageProductsRequest'
+        - properties:
+            venture:
+              $ref: '#/components/schemas/BuyNewEstateFinancing'
+            estate:
+              $ref: '#/components/schemas/RealEstate'
+    ReasonBuyExistingRequest:
+      description: Antragsdaten für den Kauf einer Bestandsimmobilie
+      required:
+        - venture
+        - estate
+      allOf:
+        - $ref: '#/components/schemas/MortgageProductsRequest'
+        - properties:
+            venture:
+              $ref: '#/components/schemas/BuyExistingEstateFinancing'
+            estate:
+              $ref: '#/components/schemas/Estate'
+    ReasonConstructionRequest:
+      description: Antragsdaten für ein eigenes Bauvorhaben
+      required:
+        - venture
+        - estate
+      allOf:
+        - $ref: '#/components/schemas/MortgageProductsRequest'
+        - properties:
+            venture:
+              $ref: '#/components/schemas/ConstructionEstateFinancing'
+            estate:
+              $ref: '#/components/schemas/House'
+    ReasonRenovationRequest:
+      description: Antragsdaten für Umbau oder Modernisierung
+      required:
+        - venture
+        - estate
+      allOf:
+        - $ref: '#/components/schemas/MortgageProductsRequest'
+        - properties:
+            venture:
+              $ref: '#/components/schemas/RenovateEstateFinancing'
+            estate:
+              $ref: '#/components/schemas/RealEstate'
+    ReasonDebtReschedulingRequest:
+      description: Antragsdaten für eine Anschlussfinanzierung
+      required:
+        - venture
+        - estate
+      allOf:
+        - $ref: '#/components/schemas/MortgageProductsRequest'
+        - properties:
+            venture:
+              $ref: '#/components/schemas/DebtReschedulingFinancing'
+            estate:
+              $ref: '#/components/schemas/Estate'
+    ReasonOtherCapitalFinancingRequest:
+      description: Antragsdaten für eine Kapitalbeschaffung
+      required:
+        - venture
+        - estate
+      allOf:
+        - $ref: '#/components/schemas/MortgageProductsRequest'
+        - properties:
+            venture:
+              $ref: '#/components/schemas/OtherCapitalFinancing'
+            estate:
+              $ref: '#/components/schemas/Estate'
+
+    AuxiliaryLoan:
+      description: Tranche des Nachrangdarlehens
+      allOf:
+        - $ref: '#/components/schemas/Loan'
+        - required: [provider, maturity]
+          properties:
+            durationInMonths:
+              type: integer
+              description: Laufzeit
+              minimum: 1
+              example: 24
+            externalCommission:
+              $ref: '#/components/schemas/ExternalCommission'
+            internalCommission:
+              $ref: '#/components/schemas/InternalCommission'
+            maturity:
+              $ref: '#/components/schemas/LoanMaturity'
+            provider:
+              type: string
+              description: >
+                Anbieter des Nachrangdarlehens:
+                 * `DSLprivat` - DSL Privatdarlehen
+                 * `HanseaticAll` - Hanseatic Nachrangdarlehen
+                 * `AxaAbrufkredit` - AXA Abrufkredit
+              x-extensible-enum:
+                - DSLprivat
+                - HanseaticAll
+                - AxaAbrufkredit
+    Building:
+      description: Gebäudespezifische Informationen
+      properties:
+        yearOfConstruction:
+          type: integer
+          description: Baujahr
+          minimum: 1000
+          maximum: 9999
+        stories:
+          type: integer
+          description: Geschosse
+          minimum: 0
+          example: 3
+        construction:
+          type: string
+          description: >
+            Bauweise:
+             * `MASSIVE` - Massivbauweise
+             * `PREFABRICATED` - Plattenbauweise
+             * `WOOD_FRAME` - Holzständerbauweise
+             * `WOOD` - Holzbauweise
+             * `LOG_BUILDING` - Blockhausbauweise
+             * `HALF_TIMBERED` - Fachwerkbauweise
+             * `LOAM` - Lehmbauweise
+             * `OTHER` - Sonstige
+          x-extensible-enum:
+            - MASSIVE
+            - PREFABRICATED
+            - WOOD_FRAME
+            - WOOD
+            - LOG_BUILDING
+            - HALF_TIMBERED
+            - LOAM
+            - OTHER
+        liftAvailable:
+          type: boolean
+          description: Aufzug vorhanden
+          example: true
+    Child:
+      description: Kind
+      required: [birthDate]
+      properties:
+        birthDate:
+          type: string
+          format: date
+          description: Geburtsdatum
+          example: "2010-06-06"
+    ContactInfo:
+      description: Kontaktinformationen
+      properties:
+        email:
+          type: string
+          description: E-Mail
+          example: "max.mustermann@mail.de"
+        phoneNumber:
+          type: string
+          description: Kundentelefonnummer
+          example: "0891234567"
+    Employment:
+      description: Daten über den Beschäftigungsstatus des Antragstellers
+      properties:
+        employmentType:
+          type: string
+          description: >
+            Beschäftigungsverhältnis:
+             * `EMPLOYED` - Angestellte/r
+             * `WORKER` - Arbeiter/in
+             * `UNEMPLOYED` - Arbeitslose/r
+             * `PUBLIC_OFFICIAL` - Beamte/r
+             * `PARENTAL_LEAVE` - Elternzeit
+             * `FREELANCER` - Freiberufler
+             * `MINI_JOB` - Geringfügig beschäftigt
+             * `CEO` - Geschäftsf. Gesellschafter/in
+             * `HOUSE_MAN_WOMAN` - Hausmann/-frau
+             * `PRIVATE_MEANS` - Privatier/e
+             * `PENSIONER` - Rentner/in, Pensionär/in
+             * `SELF_EMPLOYED_WITH_ACCOUNTING` - Selbstständige/r (bilanzierd.)
+             * `SELF_EMPLOYED_WITHOUT_ACCOUNTING` - Selbstständige/r (nicht bil.)
+             * `SOLDIER` - Soldat/in
+             * `STUDENT` - Student/in
+             * `BOARD_MEMBER` - Vorstand/Vorständin
+          x-extensible-enum:
+            - EMPLOYED
+            - WORKER
+            - UNEMPLOYED
+            - PUBLIC_OFFICIAL
+            - PARENTAL_LEAVE
+            - FREELANCER
+            - MINI_JOB
+            - CEO
+            - HOUSE_MAN_WOMAN
+            - PRIVATE_MEANS
+            - SELF_EMPLOYED_WITH_ACCOUNTING
+            - SELF_EMPLOYED_WITHOUT_ACCOUNTING
+            - PENSIONER
+            - STUDENT
+            - SOLDIER
+            - BOARD_MEMBER
+        inProbation:
+          type: boolean
+          description: Probezeit
+          example: false
+        income:
+          $ref: '#/components/schemas/Income'
+        startDate:
+          type: string
+          format: date
+          description: Beschäftigt seit
+          example: "2010-01-01"
+        temporaryJob:
+          type: boolean
+          description: Zeitlich befristet
+          example: false
+    Estate:
+      description: Daten zur Immobilie
+      required:
+        - discriminator
+      properties:
+        discriminator:
+          type: string
+          description: >
+            Typ:
+              * `Apartment` - Daten für eine Wohnung
+              * `House` - Daten für ein Haus
+              * `Plot` - Daten für ein Grundstück
+        forcedSale:
+          type: boolean
+          description: Zwangsversteigerung
+          example: false
+        liableParcels:
+          type: array
+          description: Grundbucheinträge
+          items:
+            $ref: '#/components/schemas/LiableParcel'
+        marketValue:
+          type: number
+          description: Aktueller Marktwert
+          minimum: 0.0
+          example: 200000.0
+        residentialArea:
+          $ref: '#/components/schemas/ResidentialArea'
+        standardGroundValue:
+          type: number
+          description: Bodenrichtwert
+          format: double
+          minimum: 0.0
+          example: 2000.0
+        ownership:
+          $ref: '#/components/schemas/EstateOwnership'
+      discriminator:
+        propertyName: discriminator
+    Apartment:
+      description: Wohnung
+      allOf:
+        - $ref: '#/components/schemas/RealEstate'
+        - properties:
+            flatsPerHouse:
+              type: integer
+              minimum: 1
+              description: Anzahl der Wohnungen pro Haus
+              example: 5
+            flatsPerHousingComplex:
+              type: integer
+              minimum: 1
+              description: Wohneinheiten im gesamten Wohnhaus
+              example: 10
+    House:
+      description: Haus
+      allOf:
+        - $ref: '#/components/schemas/RealEstate'
+        - properties:
+            type:
+              type: string
+              description: >
+                Immobilientyp:
+                 * `ONE_FAMILY_HOUSE` - Einfamilienhaus
+                 * `SEMI_DETACHED_HOUSE` - Doppelhaushälfte
+                 * `TWO_FAMILY_HOUSE` - Zweifamilienhaus
+                 * `END_TERRACE_HOUSE` - Reiheneckhaus
+                 * `MID_TERRACE_HOUSE` - Reihenmittelhaus
+                 * `MULTI_FAMILY_HOUSE` - Mehrfamilienhaus
+                 * `RESIDENTIAL_OFFICE_BUILDING` - Bürogebäude
+                 * `COMMERCIAL_PROPERTY` - Gewerbeimmobilie
+              x-extensible-enum:
+                - ONE_FAMILY_HOUSE
+                - SEMI_DETACHED_HOUSE
+                - TWO_FAMILY_HOUSE
+                - END_TERRACE_HOUSE
+                - MID_TERRACE_HOUSE
+                - MULTI_FAMILY_HOUSE
+                - RESIDENTIAL_OFFICE_BUILDING
+                - COMMERCIAL_PROPERTY
+          required:
+            - type
+    Plot:
+      description: Grundstück
+      allOf:
+        - $ref: '#/components/schemas/Estate'
+    EstateOwnership:
+      description: Eigentümer der Immobilie
+      properties:
+        newOwnerIsMainApplicant:
+          type: boolean
+          description: Hauptantragsteller wird Eigentümer der Immobilie
+          example: true
+        newOwnerIsAdditionalApplicant:
+          type: boolean
+          description: Mitantragsteller wird Eigentümer der Immobilie
+          example: true
+        newOwnerIsOther:
+          type: boolean
+          description: Ein Dritter wird Eigentümer der Immobilie
+          example: false
+    ExternalCommission:
+      description: Externe Provision in Prozent
+      type: number
+      format: double
+      minimum: 0.0
+      example: 3.5
+    ExtraExpenses:
+      description: Nebenkosten
+      properties:
+        notaryCosts:
+          type: number
+          description: Notar-/ Grundbuchkosten
+          minimum: 0.0
+          example: 3000.0
+        transferTax:
+          type: number
+          description: Grunderwerbsteuer
+          minimum: 0.0
+          example: 5000.0
+        brokerageFees:
+          type: number
+          description: Maklercourtage
+          minimum: 0.0
+          example: 3000.0
+    FamilyStatus:
+      description: Familienstand der Person
+      required:
+        - discriminator
+      properties:
+        discriminator:
+          type: string
+          description: >
+            Familienstand:
+              * `MaritalStatus` - Familienstand
+              * `MaritalPropertyStatus` - Familien- und Güterstand
+      discriminator:
+        propertyName: discriminator
+    MaritalStatus:
+      description: Familienstand
+      allOf:
+        - $ref: '#/components/schemas/FamilyStatus'
+        - properties:
+            maritalStatus:
+              type: string
+              description: >
+                Familienstand:
+                 * `SINGLE` - ledig
+                 * `REGISTERED_PARTNERSHIP` - eingetragene Lebenspartnerschaft
+                 * `LIVING_TOGETHER` - zusammenlebend
+                 * `WIDOWED` - verwitwet
+                 * `DIVORCED` - geschieden
+              x-extensible-enum:
+                - SINGLE
+                - REGISTERED_PARTNERSHIP
+                - LIVING_TOGETHER
+                - WIDOWED
+                - DIVORCED
+    MaritalPropertyStatus:
+      description: Familien- und Güterstand
+      allOf:
+        - $ref: '#/components/schemas/FamilyStatus'
+        - properties:
+            maritalStatus:
+              type: string
+              description: >
+                Familienstand:
+                 * `MARRIED` - verheiratet
+                 * `SEPARATED` - getrennt
+              x-extensible-enum:
+                - MARRIED
+                - SEPARATED
+            maritalPropertyStatus:
+              type: string
+              description: >
+                Güterstand:
+                 * `ZUGEW` - Zugewinngemeinschaft
+                 * `GTR_TRENN` - Gütertrennung
+                 * `GTER_GEM` - Gütergemeinschaft
+                 * `UNKNOWN` - Unbekannt
+              x-extensible-enum:
+                - ZUGEW
+                - GTR_TRENN
+                - GTER_GEM
+                - UNKNOWN
+    FinanceStatus:
+      description: Vermögen
+      properties:
+        equity:
+          type: number
+          description: Eigenkapital
+          minimum: 0.0
+          example: 100000.0
+    FinanceNeed:
+      description: Darlehensbedarf
+      required:
+        - structure
+      properties:
+        alterBurdenWanted:
+          type: boolean
+          description: Tilgungswechsel gewünscht
+          example: false
+        structure:
+          $ref: '#/components/schemas/FinanceStructureNeeded'
+    FinanceReason:
+      description: Finanzierungsgrund
+      required:
+        - discriminator
+      properties:
+        discriminator:
+          type: string
+          description: >
+            Finanzierungsgrund:
+              * `BuyNewEstateFinancing` - Kauf einer neugebauten Immobilie
+              * `BuyExistingEstateFinancing` - Kauf einer Bestandsimmobilie
+              * `ConstructionEstateFinancing` - Eigenes Bauvorhaben
+              * `RenovateEstateFinancing` - Umbau oder Modernisierung
+              * `DebtReschedulingFinancing` - Anschlussfinanzierung
+              * `OtherCapitalFinancing` - Kapitalbeschaffung
+      discriminator:
+        propertyName: discriminator
+    ConstructionEstateFinancing:
+      description: Eigenes Bauvorhaben
+      allOf:
+        - $ref: '#/components/schemas/FinanceReason'
+        - required:
+            - constructionCosts
+          properties:
+            beginConstructionDate:
+              type: string
+              format: date
+              description: Baubeginn
+              example: "2020-01-30"
+            constructionCosts:
+              type: number
+              description: Baukosten
+              minimum: 0.0
+              example: 200000.0
+            extraExpenses:
+              $ref: '#/components/schemas/ExtraExpenses'
+            landPrice:
+              type: number
+              description: Grundstückspreis
+              minimum: 0.0
+              example: 100000.0
+    BuyEstateFinancing:
+      description: Kauf einer Immobilie
+      allOf:
+        - $ref: '#/components/schemas/FinanceReason'
+        - required:
+            - buyPrice
+          properties:
+            acquisitionDate:
+              type: string
+              format: date
+              description: Kaufdatum
+              example: "2020-07-1"
+            buyPrice:
+              type: number
+              description: Kaufpreis
+              minimum: 0.0
+              example: 200000.0
+            costsOfPlannedModernisation:
+              type: number
+              description: Kosten für Umbau/Modernisierung
+              minimum: 0.0
+              example: 25000.0
+            extraExpenses:
+              $ref: '#/components/schemas/ExtraExpenses'
+    BuyExistingEstateFinancing:
+      description: Kauf einer Bestandsimmobilie
+      allOf:
+        - $ref: '#/components/schemas/BuyEstateFinancing'
+    BuyNewEstateFinancing:
+      description: Kauf einer neugebauten Immobilie
+      allOf:
+        - $ref: '#/components/schemas/BuyEstateFinancing'
+    DebtReschedulingFinancing:
+      description: Anschlussfinanzierung
+      allOf:
+        - $ref: '#/components/schemas/FinanceReason'
+        - properties:
+            rescheduledLoans:
+              type: array
+              description: Bestehende Darlehen
+              items:
+                $ref: '#/components/schemas/RescheduledLoan'
+    RenovateEstateFinancing:
+      description: Umbau oder Modernisierung
+      required:
+        - costsOfPlannedModernisation
+      allOf:
+        - $ref: '#/components/schemas/FinanceReason'
+        - properties:
+            costsOfPlannedModernisation:
+              type: number
+              description: Kosten für Umbau/Modernisierung
+              minimum: 0.0
+              example: 25000.0
+    OtherCapitalFinancing:
+      description: Kapitalbeschaffung
+      allOf:
+        - $ref: '#/components/schemas/FinanceReason'
+    FinanceStructureNeeded:
+      description: Erforderliche Kredite für die Finanzierungsstruktur
+      required:
+        - financeTranches
+      properties:
+        financeTranches:
+          type: array
+          description: Gewünschte Darlehenstranchen
+          minItems: 1
+          maxItems: 7
+          items:
+            $ref: '#/components/schemas/LoanInstructions'
+
+    MultiplePersonHousehold:
+      description: Haushalt mit zwei Antragsstellern
+      allOf:
+        - $ref: '#/components/schemas/Household'
+        - properties:
+            applicants:
+              type: array
+              description: Liste der Antragssteller
+              minItems: 2
+              maxItems: 2
+              items:
+                $ref: '#/components/schemas/Applicant'
+            relationType:
+              type: string
+              description: >
+                Beziehungsverhältnis zwischen den Antragstellern:
+                 * `MARRIED` - mit Ehepartner/in
+                 * `REGISTERED_PARTNERSHIP` - mit eingetragenem Lebenspartner/in
+                 * `LIVING_TOGETHER` - mit Lebenspartner/in
+              x-extensible-enum:
+                - MARRIED
+                - REGISTERED_PARTNERSHIP
+                - LIVING_TOGETHER
+          required:
+            - applicants
+            - relationType
+
+    SingleHousehold:
+      description: Haushalt mit einem Antragssteller
+      allOf:
+        - $ref: '#/components/schemas/Household'
+        - properties:
+            applicant:
+              $ref: '#/components/schemas/Applicant'
+          required:
+            - applicant
+
+    Household:
+      description: Haushalt
+      required:
+        - discriminator
+      discriminator:
+        propertyName: discriminator
+      properties:
+        discriminator:
+          type: string
+          description: >
+            Art des Haushaltes:
+              * `SingleHousehold` - Haushalt mit einem Antragssteller
+              * `MultiplePersonHousehold` - Haushalt mit zwei Antragsstellern
+        cars:
+          type: integer
+          description: Anzahl PKW im Haushalt
+          minimum: 0
+          example: 1
+        dependentChildren:
+          type: integer
+          description: Anzahl unterhaltspflichtiger Kinder im Haushalt
+          minimum: 0
+          example: 1
+        persons:
+          type: integer
+          description: Anzahl im Haushalt lebender Personen
+          minimum: 0
+          example: 3
+        totalChildAllowance:
+          type: number
+          description: Kindergeld gesamt
+          minimum: 0.0
+          example: 204.0
+    HousingUnit:
+      description: Wohneinheit
+      required:
+        - utilization
+      properties:
+        livingSpace:
+          type: number
+          description: Wohnfläche gesamt (ohne Gewerbefläche)
+          example: 120.5
+          minimum: 0.0
+        numberOfParkingSpaces:
+          type: integer
+          description: Anzahl Stellplätze
+          example: 1
+          minimum: 0
+        utilization:
+          type: string
+          description: >
+            Nutzung:
+             * `SELF_OCCUPIED` - selbst bewohnt
+             * `RENT_OUT` - vermietet
+             * `PARTLY_RENT_OUT` - teilweise vermietet
+          x-extensible-enum:
+            - SELF_OCCUPIED
+            - RENT_OUT
+            - PARTLY_RENT_OUT
+        leasehold:
+          type: boolean
+          description: Erbbau
+          example: false
+        lessor:
+          type: string
+          description: >
+            Erbbaugeber:
+             * `Kirche` - Kirche
+             * `Stadt` - Stadt / Gemeinde
+             * `Privat` - Privatperson
+             * `Firma` - Unternehmen
+             * `Sonstige` - Sonstige
+          x-extensible-enum:
+            - Kirche
+            - Stadt
+            - Privat
+            - Firma
+            - Sonstige
+        subordination:
+          type: boolean
+          description: Rangrücktritt
+          example: false
+        monthlyGroundRent:
+          type: number
+          description: Erbbauzins
+          minimum: 0.0
+    Income:
+      description: Einkommen
+      required:
+        - discriminator
+      properties:
+        discriminator:
+          type: string
+          description: >
+            Einkommen:
+              * `NetSalaryIncome` - Monatslohn und -gehalt netto
+              * `SelfEmploymentIncome` - Einkünfte aus selbstständiger Tätigkeit (nach Steuern)
+      discriminator:
+        propertyName: discriminator
+    NetSalaryIncome:
+      description: Monatslohn und -gehalt netto
+      allOf:
+        - $ref: '#/components/schemas/Income'
+        - properties:
+            monthlySalary:
+              type: number
+              description: Lohn und Gehalt
+              minimum: 0.0
+              example: 4000.0
+            numberOfMonthlySalaries:
+              type: number
+              description: Anzahl Monatsgehälter
+              format: double
+              minimum: 0.0
+              example: 12
+    SelfEmploymentIncome:
+      description: Einkünfte aus selbstständiger Tätigkeit (nach Steuern)
+      allOf:
+        - $ref: '#/components/schemas/Income'
+        - properties:
+            selfEmploymentIncome:
+              type: number
+              description: Einkünfte aus selbstständiger Tätigkeit (nach Steuern)
+              minimum: 0.0
+              example: 6800.0
+
+    InternalCommission:
+      description: Provision in Prozent
+      type: number
+      format: double
+      minimum: 0.0
+      example: 3.5
+    KfwPromotionLoan:
+      description: Tranche des KfW-Darlehens
+      allOf:
+        - $ref: '#/components/schemas/Loan'
+        - required: [program]
+          properties:
+            maturity:
+              $ref: '#/components/schemas/Maturity'
+            interestOnlyDurationYears:
+              type: integer
+              description: Tilgungsfreie Anlaufjahre
+              minimum: 0
+              example: 1
+            program:
+              type: string
+              description: >
+                KfW Programm:
+                 * `Wohn159` - Altersgerecht Umbauen (159)
+                 * `Wohneigen` - Wohneigentumsprogramm (124)
+                 * `Energie153_40` - Energieeffizient Bauen 40Plus/40/55 (153)
+                 * `Energie151` - Energieeffizient Sanieren (151)
+                 * `Energie152` - Energieeff. Sanieren Einzel. (152)
+                 * `Energie167` - Energieeff. Sanieren Ergänz. (167)
+              x-extensible-enum:
+                - Wohn159
+                - Wohneigen
+                - Energie153_40
+                - Energie151
+                - Energie152
+                - Energie167
+            durationInMonths:
+              type: integer
+              description: Laufzeit in Monaten
+              minimum: 0
+              example: 60
+    Maturity:
+      description: Sollzinsbindung
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          description: >
+            Art der Sollzinsbindung:
+              * `LoanMaturity` - Sollzinsbindung in Jahren
+              * `BulletLoan` - endfällig
+      discriminator:
+        propertyName: type
+    LoanMaturity:
+      description: Sollzinsbindung in Jahren
+      allOf:
+        - $ref: '#/components/schemas/Maturity'
+        - required: [years]
+          properties:
+            years:
+              type: integer
+              minimum: 0
+              maximum: 40
+              description: Sollzinsbindung in Jahren
+              example: 10
+    BulletLoan:
+      description: Endfälliger Kredit
+      allOf:
+        - $ref: '#/components/schemas/Maturity'
+
+    LiableParcel:
+      description: Grundbuch
+      properties:
+        owner:
+          type: string
+          description: >
+            Wer wird Eigentümer der Immobilie:
+             * `MAIN` - nur Darlehensnehmer 1
+             * `ADD` - nur Darlehensnehmer 2
+             * `BOTH` - beide Darlehensnehmer
+             * `THIRD` - Dritter
+             * `BOTH_THIRD` - Darlehensnehmer und Dritter
+          x-extensible-enum:
+            - MAIN
+            - ADD
+            - BOTH
+            - THIRD
+            - BOTH_THIRD
+    LivingSituation:
+      description: Wohnsituation
+      required:
+        - discriminator
+      properties:
+        discriminator:
+          type: string
+          description: >
+            Wohnsituation:
+              * `LivingSituationWithRent` - Wohnsituation zur Miete
+              * `LivingSituationWithoutRent` - Wohnsituation ohne Miete
+      discriminator:
+        propertyName: discriminator
+    LivingSituationWithRent:
+      description: Wohnsituation zur Miete
+      allOf:
+        - $ref: '#/components/schemas/LivingSituation'
+        - required: [monthlyHousingCosts, housingCostsWillCease]
+          properties:
+            monthlyHousingCosts:
+              type: number
+              description: Derzeitige Wohnkosten
+              minimum: 0.0
+              example: 999.50
+            housingCostsWillCease:
+              type: boolean
+              description: Aktuelle Wohnkosten entfallen nach der Finanzierung
+              example: true
+    LivingSituationWithoutRent:
+      description: Wohnsituation ohne Miete
+      allOf:
+        - $ref: '#/components/schemas/LivingSituation'
+        - required:
+            - type
+          properties:
+            type:
+              type: string
+              description: >
+                Derzeitige Wohnsituation:
+                 * `RATE` - im Eigentum mit Darlehensrate
+                 * `PAID_PROPERTY` - im abbezahlten Eigentum
+                 * `PARENTS` - mietfrei bei den Eltern/Partner
+              x-extensible-enum:
+                - RATE
+                - PAID_PROPERTY
+                - PARENTS
+
+    Loan:
+      description: Darlehenstranche
+      required:
+        - discriminator
+        - amount
+      properties:
+        discriminator:
+          type: string
+          description: >
+            Tranche:
+              * `AnnuityLoan` - Tranche des Annuitätendarlehens
+              * `AuxiliaryLoan` - Tranche des Nachrangdarlehens
+              * `KfwPromotionLoan` - Tranche des KfW-Darlehens
+        amount:
+          type: number
+          description: Darlehensbetrag
+          minimum: 0.0
+          example: 150000.0
+        overheadCommission:
+          $ref: '#/components/schemas/OverheadCommission'
+      discriminator:
+        propertyName: discriminator
+    OverheadCommission:
+      description: Overhead-Provision
+      type: number
+      format: double
+      minimum: 0.0
+      example: 3.5
+    LoanInstructions:
+      description: Darlehen
+      required:
+        - discriminator
+      properties:
+        discriminator:
+          type: string
+          description: >
+            Darlehen:
+              * `AnnuityLoanInstructions` - Annuitätendarlehen (max. 3)
+              * `AuxiliaryLoanInstructions` - Nachrangdarlehen (max. 1)
+              * `KfwPromotionLoanInstructions` - KfW-Darlehen (max 3)
+      discriminator:
+        propertyName: discriminator
+    AnnuityLoanInstructions:
+      description: Annuitätendarlehen
+      allOf:
+        - $ref: '#/components/schemas/LoanInstructions'
+        - required: [loan, payoutRate]
+          properties:
+            loan:
+              $ref: '#/components/schemas/AnnuityLoan'
+            payoutRate:
+              $ref: '#/components/schemas/PayoutRate'
+            payoutDate:
+              type: string
+              format: date
+              description: Auszahlungsdatum
+              example: "2020-07-01"
+    AuxiliaryLoanInstructions:
+      description: Nachrangdarlehen
+      allOf:
+        - $ref: '#/components/schemas/LoanInstructions'
+        - properties:
+            loan:
+              $ref: '#/components/schemas/AuxiliaryLoan'
+          required: [loan]
+    KfwPromotionLoanInstructions:
+      description: KfW-Darlehen
+      allOf:
+        - $ref: '#/components/schemas/LoanInstructions'
+        - required: [loan, payoutRate]
+          properties:
+            loan:
+              $ref: '#/components/schemas/KfwPromotionLoan'
+            payoutRate:
+              $ref: '#/components/schemas/PayoutRate'
+    PayoutRate:
+      description: Auszahlungskurs
+      type: number
+      format: double
+      minimum: 90.0
+      maximum: 100.0
+      example: 100.0
+      default: 100.0
+    PersonName:
+      description: Name der Person
+      required: [firstNames, lastName]
+      properties:
+        firstNames:
+          type: string
+          description: Vornamen
+          example: "Max"
+        lastName:
+          type: string
+          description: Nachname
+          example: "Mustermann"
+        title:
+          type: string
+          description: >
+            Akademischer Titel:
+             * `DiplIng` - Dipl. Ing.
+             * `Dr` - Dr.
+             * `DrDr` - Dr. Dr.
+             * `DrIng` - Dr. Ing.
+             * `PhD` - PhD
+             * `PDDr` - PD Dr.
+             * `Prof` - Prof.
+             * `ProfDr` - Prof. Dr.
+          x-extensible-enum:
+            - DiplIng
+            - Dr
+            - DrDr
+            - DrIng
+            - PhD
+            - PDDr
+            - Prof
+            - ProfDr
+    RealEstate:
+      description: Immobilie
+      allOf:
+        - $ref: '#/components/schemas/Estate'
+        - properties:
+            building:
+              $ref: '#/components/schemas/Building'
+            housingUnit:
+              $ref: '#/components/schemas/HousingUnit'
+    RescheduledLoan:
+      description: Bestehendes Darlehen
+      required:
+        - dueDate
+        - residualDebt
+      properties:
+        needsFollowUp:
+          type: boolean
+          description: Darlehen ablösen
+          example: true
+        dueDate:
+          type: string
+          format: date
+          description: Zeitpunkt der Anschlussfinanzierung
+          example: "2021-01-01"
+        residualDebt:
+          type: number
+          description: Vrs. Restschuld zum Zinsanpassungstermin
+          minimum: 0.0
+          example: 55500.0
+        originalDebt:
+          type: number
+          description: Darlehenshöhe
+          minimum: 0.0
+          example: 100000.0
+        monthlyRate:
+          type: number
+          description: Rate (monatlich)
+          minimum: 0.0
+          example: 500.0
+    ResidentialArea:
+      description: Wohngebiet
+      properties:
+        address:
+          $ref: '#/components/schemas/Address'
+        estateNeighbourhood:
+          type: string
+          description: >
+            Umgebung:
+             * `RESIDENTIAL_AREA` - reines Wohngebiet
+             * `COMMERCIAL_AREA` - überwiegend Gewerbegebiet
+             * `INDUSTRIAL_AREA` - Industriegebiet
+             * `MIXED_AREA` - Mischgebiet
+             * `OUTSIDE_RESIDENTIAL_AREA` - Einzellage außerhalb des Orts
+          x-extensible-enum:
+            - RESIDENTIAL_AREA
+            - COMMERCIAL_AREA
+            - INDUSTRIAL_AREA
+            - MIXED_AREA
+            - OUTSIDE_RESIDENTIAL_AREA
+
+    ##################
+    # Response types #
+    ##################
+    MortgageProductsResponse:
+      description: Ergebnis der Produktberechnung
+      required:
+        - mortgageProducts
+      properties:
+        mortgageProducts:
+          type: array
+          description: Liste möglicher Finanzierungen
+          items:
+            $ref: '#/components/schemas/MortgageProduct'
+        hints:
+          type: array
+          description: Machbarkeitshinweise
+          items:
+            $ref: '#/components/schemas/Hint'
+      example:
+        mortgageProducts:
+          - financingStructure:
+              financeTranches:
+                - discriminator: AnnuityLoanProposal
+                  amount: 200000
+                  monthlyAmortisation: 3
+                  durationMonths: 362
+                  maturityYears: 10
+                  interest:
+                    annualNominalInterest: 0.67
+                    annualEffectiveInterest: 0.73
+                  regularPayment:
+                    monetaryAmount: 611.67
+                    paymentCycle: MONTHLY
+                  residualDebt: 137961.83
+                  unscheduledRepayment:
+                    annualPercentage: 5
+                  provider:
+                    id: 3
+                    name: ING
+                  productName: ''
+                  loanQuota: 66.67
+                  freeAllocationTimeMonths: 12
+                  fullRepayment: false
+                  forward: false
+              mixedInterest:
+                annualNominalInterest: 0.67
+                annualEffectiveInterest: 0.73
+              loanQuota: 66.67
+              totalMonthlyRate: 611.67
+              remainingMonthlyLiquidity: 763.33
+              changedAmortisation: false
+              features:
+                - hints:
+                    - hint: bis zu zweimal kostenfrei während der Zinsbindung möglich
+                      weight: IMPORTANT
+                  type: REPAYMENT_RATE_CHANGE
+            name: diba
+            signal: FEASIBLE
+          - financingStructure:
+              financeTranches:
+                - discriminator: AnnuityLoanProposal
+                  amount: 200000
+                  monthlyAmortisation: 3
+                  durationMonths: 367
+                  maturityYears: 10
+                  interest:
+                    annualNominalInterest: 0.57
+                    annualEffectiveInterest: 0.63
+                  regularPayment:
+                    monetaryAmount: 595
+                    paymentCycle: MONTHLY
+                  residualDebt: 138272.16
+                  unscheduledRepayment:
+                    annualPercentage: 5
+                  provider:
+                    id: 3
+                    name: ING
+                  productName: bei Bestand oder Abschluss eines kostenlosen Gehaltskontos
+                  loanQuota: 66.67
+                  freeAllocationTimeMonths: 12
+                  fullRepayment: false
+                  forward: false
+              mixedInterest:
+                annualNominalInterest: 0.57
+                annualEffectiveInterest: 0.63
+              loanQuota: 66.67
+              totalMonthlyRate: 595
+              remainingMonthlyLiquidity: 780
+              changedAmortisation: false
+              features:
+                - hints:
+                    - hint: bis zu zweimal kostenfrei während der Zinsbindung möglich
+                      weight: IMPORTANT
+                  type: REPAYMENT_RATE_CHANGE
+            name: diba_girokonto
+            signal: FEASIBLE
+        hints: []
+
+    Feature:
+      description: Produktinformation
+      properties:
+        hints:
+          type: array
+          description: Produkteigenschaften
+          items:
+            $ref: '#/components/schemas/FeatureHint'
+        type:
+          type: string
+          description: >
+            Typ:
+             * `REPAYMENT_RATE_CHANGE` - Tilgungssatzwechsel möglich
+          x-extensible-enum:
+            - REPAYMENT_RATE_CHANGE
+    FeatureHint:
+      description: Produkteigenschaft
+      properties:
+        hint:
+          type: string
+          description: Hinweistext
+        weight:
+          type: string
+          description: >
+            Gewichtung:
+             * `IMPORTANT` - wichtig
+             * `UNIMPORTANT` - unwichtig
+          x-extensible-enum:
+            - IMPORTANT
+            - UNIMPORTANT
+    FinancingStructureProposal:
+      description: Finanzierungsstruktur
+      required:
+        - financeTranches
+      properties:
+        financeTranches:
+          type: array
+          description: Berechnete Finanzierungstranchen
+          items:
+            $ref: '#/components/schemas/LoanProposal'
+        mixedInterest:
+          $ref: '#/components/schemas/LoanInterest'
+        loanQuota:
+          $ref: '#/components/schemas/LoanQuota'
+        totalMonthlyRate:
+          type: number
+          description: monatliche Gesamtrate
+          format: double
+          example: 1000.0
+        remainingMonthlyLiquidity:
+          type: number
+          description: Monatlicher Überschuss, der nach Abzug sämtlicher Ausgaben inkl. der Finanzierung noch übrig ist
+          format: double
+          example: 1000.0
+        changedAmortisation:
+          type: boolean
+          description: Tilgung geändert
+        features:
+          type: array
+          description: Produktinformationen
+          items:
+            $ref: '#/components/schemas/Feature'
+    Hint:
+      description: Machbarkeitshinweis
+      required:
+        - type
+      properties:
+        data:
+          additionalProperties:
+            type: string
+          description: Zusätzliche Informationen zur Machbarkeit
+        type:
+          type: string
+          description: >
+            Hinweistyp:
+             * `ONLY_HARDLY_FEASIBLE_UNSCHEDULED_REPAYMENT` - nur schwer machbar, da Sondertilgung zu hoch
+             * `ONLY_HARDLY_FEASIBLE_LOAN_QUOTA` - nur schwer machbar, da Beleihungsauslauf zu hoch
+             * `ONLY_HARDLY_FEASIBLE_REMAINING_LIQUIDITY` - nur schwer machbar, da monatlicher Überschuss zu gering
+             * `ONLY_HARDLY_FEASIBLE_FULL_REPAYMENT` - nur schwer machbar, da Volltilgerdarlehen
+             * `ONLY_HARDLY_FEASIBLE` - nur schwer machbar
+             * `LOAN_AMOUNT_TOO_LOW` - Mindestdarlehenssumme nicht erreicht
+             * `FIRST_LOAN_AMOUNT_WITH_KFW_TOO_LOW` - Darlehensbetrag der ersten Annuitätentranche in Verbindung mit einem KfW Darlehen ist zu gering
+             * `AMORTISATION_CHANGED` - Tilgung geändert
+          x-extensible-enum:
+            - ONLY_HARDLY_FEASIBLE_UNSCHEDULED_REPAYMENT
+            - ONLY_HARDLY_FEASIBLE_LOAN_QUOTA
+            - ONLY_HARDLY_FEASIBLE_REMAINING_LIQUIDITY
+            - ONLY_HARDLY_FEASIBLE_FULL_REPAYMENT
+            - ONLY_HARDLY_FEASIBLE
+            - LOAN_AMOUNT_TOO_LOW
+            - FIRST_LOAN_AMOUNT_WITH_KFW_TOO_LOW
+            - AMORTISATION_CHANGED
+    LoanInterest:
+      description: Darlehenszinsen
+      properties:
+        annualNominalInterest:
+          type: number
+          description: Gebundener Sollzinssatz p.a.
+          format: double
+          example: 1.1
+        annualEffectiveInterest:
+          type: number
+          description: Effektiver Jahreszins
+          format: double
+          example: 1.15
+    LoanProposal:
+      required:
+        - discriminator
+      properties:
+        discriminator:
+          type: string
+          description: >
+            Typ:
+              * `AnnuityLoanProposal` - Berechnetes Annuitätendarlehen
+              * `AuxiliaryLoanProposal` - Berechnetes Nachrangdarlehen
+              * `KfwPromotionLoanProposal` - Berechnetes KfW-Förderdarlehen
+        amount:
+          type: number
+          description: Darlehensbetrag
+          format: double
+          example: 100000.0
+        monthlyAmortisation:
+          type: number
+          description: Tilgung in Prozent
+          format: double
+          example: 2.0
+        durationMonths:
+          type: integer
+          description: Darlehensdauer bei gleichbleibendem Zins in Monaten
+          example: 240
+        maturityYears:
+          type: integer
+          description: Sollzinsbindung in Jahren
+          example: 10
+        interest:
+          $ref: '#/components/schemas/LoanInterest'
+        regularPayment:
+          $ref: '#/components/schemas/RegularPayment'
+        residualDebt:
+          type: number
+          description: Restschuld am Ende der Sollzinsbindung
+          format: double
+          example: 50000.0
+        unscheduledRepayment:
+          $ref: '#/components/schemas/UnscheduledRepayment'
+
+      discriminator:
+        propertyName: discriminator
+    AnnuityLoanProposal:
+      description: Berechnetes Annuitätendarlehen
+      allOf:
+        - $ref: '#/components/schemas/LoanProposal'
+        - properties:
+            provider:
+              $ref: '#/components/schemas/LoanProvider'
+            productName:
+              type: string
+              description: Produktname
+            loanQuota:
+              $ref: '#/components/schemas/LoanQuota'
+            freeAllocationTimeMonths:
+              $ref: '#/components/schemas/FreeAllocationMonths'
+            fullRepayment:
+              type: boolean
+              description: Volltilger
+            forward:
+              type: boolean
+              description: Forwarddarlehen
+    AuxiliaryLoanProposal:
+      description: Berechnetes Nachrangdarlehen
+      allOf:
+        - $ref: '#/components/schemas/LoanProposal'
+        - properties:
+            provider:
+              $ref: '#/components/schemas/LoanProvider'
+    KfwPromotionLoanProposal:
+      description: Berechnetes KfW-Förderdarlehen
+      allOf:
+        - $ref: '#/components/schemas/LoanProposal'
+        - properties:
+            programNumber:
+              type: string
+              description: Programmnummer
+            monthlyPaymentWithoutAmortisation:
+              type: number
+              description: Monatsrate ohne Tilgung
+              format: double
+              example: 1000.0
+            freeAllocationTimeMonths:
+              $ref: '#/components/schemas/FreeAllocationMonths'
+
+    FreeAllocationMonths:
+      type: integer
+      description: bereitstellungszinsfreie Zeit in Monaten
+      example: 6
+    LoanProvider:
+      description: Darlehensgeber
+      properties:
+        id:
+          type: integer
+          description: ID der Bank
+        name:
+          type: string
+          description: Name der Bank
+    LoanQuota:
+      type: number
+      description: Beleihungsauslauf
+      format: double
+      example: 60.0
+    MortgageProduct:
+      description: Baufinanzierungsprodukt
+      required:
+        - financingStructure
+        - name
+        - optimizedProduct
+      properties:
+        financingStructure:
+          $ref: '#/components/schemas/FinancingStructureProposal'
+        name:
+          type: string
+          description: Produktname
+#        optimizableProduct:
+#          type: boolean
+#          description: Diese Finanzierung kann optimiert werden
+        signal:
+          type: string
+          description: >
+            Machbarkeit:
+             * `FEASIBLE` - machbar
+             * `NEEDS_ATTENTION` - erfordert Aufmerksamkeit
+             * `HARDLY_FEASIBLE` - schwer machbar
+          x-extensible-enum:
+            - FEASIBLE
+            - NEEDS_ATTENTION
+            - HARDLY_FEASIBLE
+    PaymentCycle:
+      type: string
+      description: >
+        Zahlungsperiode:
+         * `MONTHLY` - monatlich
+         * `QUARTERLY` - quartalsweise
+         * `HALF_YEARLY` - halbjährlich
+         * `ANNUAL` - jährlich
+      x-extensible-enum:
+        - MONTHLY
+        - QUARTERLY
+        - HALF_YEARLY
+        - ANNUAL
+    RegularPayment:
+      description: Darlehensrate mit Zahlungsperiode
+      required: [monetaryAmount, paymentCycle]
+      properties:
+        monetaryAmount:
+          type: number
+          description: Rate pro Periode
+          format: double
+          example: 1000.0
+        paymentCycle:
+          $ref: '#/components/schemas/PaymentCycle'
+
+    UnscheduledRepayment:
+      description: Sondertilgungsoption
+      properties:
+        annualPercentage:
+          type: number
+          description: jährliche Sondertilgung in Prozent
+          format: double
+          example: 2.5
+        description:
+          type: string
+          description: Erläuterungstext
+
+
+    OAuthProblem:
+      description: Fehler bei der Authentifizierung
+      properties:
+        error:
+          type: string
+          description: Fehlermeldung
+          example: invalid_token
+        error_description:
+          type: string
+          description: Weitere Beschreibung des Fehlerbildes
+          example: Access token expired
+
+    RFC7807Problem:
+      type: object
+      description: Detaillierte Informationen zum Fehler
+      required: [timestamp, traceId, instance, title, status]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Fehlerzeitpunkt als UTC date-time
+        type:
+          type: string
+          format: uri
+          description: Weitere Informationen zum Fehler
+          default: 'about:blank'
+        title:
+          type: string
+          description: Fehlermeldung
+          example: Bad Request
+        status:
+          type: integer
+          format: int32
+          description: HTTP Status Code basierend auf folgenden Error Codes (https://tools.ietf.org/html/rfc2616#section-10)
+          example: 400
+          minimum: 100
+          maximum: 600
+          exclusiveMaximum: true
+        detail:
+          type: string
+          description: Weitere Beschreibung des Fehlerbildes
+          example: JSON parse error
+        traceId:
+          type: string
+          description: Trace Id des Requests
+          example: avx1234asd
+        instance:
+          type: string
+          format: uri
+          description: Aufrufpfad
+        violations:
+          type: array
+          description: Liste von Feldern mit fehlerhaftem Inhalt
+          items:
+            $ref: '#/components/schemas/Violation'
+    Violation:
+      description: Beschreibung eines fehlerhaften Feldwertes
+      properties:
+        field:
+          type: string
+          description: Name des Feldes
+          example: venture.amount
+        message:
+          type: string
+          description: Beschreibung des Fehlers
+          example: must be greater than or equal to 0
+
+security:
+  - bearerAuth: []
