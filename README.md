@@ -1,4 +1,4 @@
-# Top-Rate-API
+# Loan-And-Product-API
 ## Einleitung
 Mit dieser API erhalten Sie die Möglichkeit verschiedene Zinsberechnungen durchzuführen.  
 Über 400 Bankpartner liefern die Basis für die Berechnungen.
